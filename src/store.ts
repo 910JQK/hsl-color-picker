@@ -23,7 +23,7 @@ let reducers: { [type:string]: (s: State, a: Action) => State } = {
     }
 }
 
-let epics: Epic<Action,Action,State>[] = [
+let epics: Array<Epic<Action,Action,State>> = [
     ($action, _) => {
         let async_increment = $action.ofType(Actions.INC_ASYNC)
         return async_increment.pipe (
