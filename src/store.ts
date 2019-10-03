@@ -1,8 +1,10 @@
-import { createStore } from 'redux'
+import { createStore, compose, applyMiddleware } from 'redux'
+import { Epic, createEpicMiddleware, combineEpics } from 'redux-observable'
+import { delay, map } from 'rxjs/operators'
 import Actions from './actions'
 
 type Action = Actions.Action
-type Dispatch<T extends Action> = (a: T) => void
+let New = Actions.New
 
 interface State {
     count: number
@@ -21,22 +23,39 @@ let reducers: { [type:string]: (s: State, a: Action) => State } = {
     }
 }
 
+let epics: Epic<Action,Action,State>[] = [
+    ($action, _) => {
+        let async_increment = $action.ofType(Actions.INC_ASYNC)
+        return async_increment.pipe (
+            delay(1000),
+            map(_ => New<Actions.Inc>({ type: Actions.INC }))
+        )
+    },
+    ($action, _) => {
+        let async_decrement = $action.ofType(Actions.DEC_ASYNC)
+        return async_decrement.pipe (
+            delay(500),
+            map(_ => New<Actions.Dec>({ type: Actions.DEC }))
+        )
+    }
+]
+
 let root_reducer = (state: State = initial, action: Action): State => {
-    if (action.type.startsWith('@@')) {
-        return state
-    } else {
+    if (reducers[action.type]) {
         return reducers[action.type](state, action)
+    } else {
+        return state
     }
 }
-
-let store = createStore
-(
+let root_epic = combineEpics(...epics)
+let epic_middleware = createEpicMiddleware<Action,Action,State>()
+let store = createStore (
     root_reducer,
-    (
-        (window as any).__REDUX_DEVTOOLS_EXTENSION__
-        && (window as any).__REDUX_DEVTOOLS_EXTENSION__()
+    ((window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose) (
+        applyMiddleware(epic_middleware)
     )
 )
+epic_middleware.run(root_epic)
 
-export { State, Action, Actions, Dispatch }
+export { State, New, Action, Actions }
 export default store
