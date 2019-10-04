@@ -9,7 +9,7 @@ function Hello (): JSX.Element {
     return (
         <Provider store={store} >
             <h2>Hello World</h2>
-            <HueRing/>
+            <HueRing value={30} />
             <Counter/>
         </Provider>
     )
