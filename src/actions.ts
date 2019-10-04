@@ -1,28 +1,36 @@
 namespace Actions {
 
-    export const INC = 'INC'
-    export const DEC = 'DEC'
-    export const INC_ASYNC = 'INC_ASYNC'
-    export const DEC_ASYNC = 'DEC_ASYNC'
+    export const H_MOUSE_DOWN = 'H_MOUSE_DOWN'
+    export const H_MOUSE_MOVE = 'H_MOUSE_MOVE'
+    export const SL_MOUSE_DOWN = 'SL_MOUSE_DOWN'
+    export const SL_MOUSE_MOVE = 'SL_MOUSE_MOVE'
+    export const MOUSE_UP = 'MOUSE_UP'
+    export const H_COMMIT = 'H_COMMIT'
+    export const SL_COMMIT = 'SL_COMMIT'
 
     export interface Action {
         type: string
     }
 
-    export interface Inc extends Action {
-        type: typeof INC
+    export interface H_MouseDown extends Action {
+        type: typeof H_MOUSE_DOWN,
+        angle: number,
+        on_cursor: boolean,
+        cursor_angle?: number
+    }
+    
+    export interface H_MouseMove extends Action {
+        type: typeof H_MOUSE_MOVE,
+        angle: number,
+    }
+    
+    export interface MouseUp extends Action {
+        type: typeof MOUSE_UP
     }
 
-    export interface Dec extends Action {
-        type: typeof DEC
-    }
-
-    export interface IncAsync extends Action {
-        type: typeof INC_ASYNC
-    }
-
-    export interface DecAsync extends Action {
-        type: typeof DEC_ASYNC
+    export interface H_Commit extends Action {
+        type: typeof H_COMMIT,
+        hue: number
     }
 
     export function New<T extends Action> (action: T): Action {

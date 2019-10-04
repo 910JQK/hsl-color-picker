@@ -1,5 +1,33 @@
+import { MouseEvent } from 'react'
+
 type Vector = [number, number]
 type Triangle = [Vector, Vector, Vector]
+
+function range (start: number, end: number): Generator<number> {
+    return linspace(start, end, 1)
+}
+
+function* linspace (start: number, end: number, step: number): Generator<number> {
+    for (let i = start; i < end; i += step) {
+        yield i
+    }
+}
+
+function deg2rad (x: number): number {
+    return x * (Math.PI / 180)
+}
+
+function rad2deg (x: number): number {
+    return x * (180 / Math.PI)
+}
+
+function sin (x: number): number {
+    return Math.sin(deg2rad(x))
+}
+
+function cos (x: number): number {
+    return Math.cos(deg2rad(x))
+}
 
 function polar (rho: number, theta: number): Vector {
     return [rho*cos(theta), rho*sin(theta)]
@@ -15,6 +43,19 @@ function vector_diff (v: Vector, w: Vector): Vector {
 
 function normal_vector (v: Vector): Vector {
     return [v[1], -v[0]]
+}
+
+function incline_angle (v: Vector): number {
+    let theta = rad2deg(Math.atan2(v[1], v[0]))
+    if (theta > 0) {
+        return theta
+    } else {
+        return (360 + theta) % 360
+    }
+}
+
+function norm (v: Vector): number {
+    return Math.sqrt(v[0]*v[0] + v[1]*v[1])
 }
 
 function is_clockwise (v: Vector, w: Vector): boolean {
@@ -38,26 +79,20 @@ function in_triangle (t: Triangle, v: Vector): boolean {
     )
 }
 
-function deg2rad (x: number): number {
-    return x * (Math.PI / 180)
+function get_event_point (ev: MouseEvent, ratio: number): Vector {
+    let element = (ev.target as HTMLElement)
+    let x = ev.pageX - element.offsetLeft
+    let y = ev.pageY - element.offsetTop
+    return [x / ratio, y / ratio]
 }
 
-function sin (x: number): number {
-    return Math.sin(deg2rad(x))
-}
 
-function cos (x: number): number {
-    return Math.cos(deg2rad(x))
+export {
+    Vector, Triangle,
+    range,
+    deg2rad, polar,
+    vector_sum, vector_diff,
+    incline_angle, norm,
+    in_triangle,
+    get_event_point
 }
-
-function range (start: number, end: number): Generator<number> {
-    return linspace(start, end, 1)
-}
-
-function* linspace (start: number, end: number, step: number): Generator<number> {
-    for (let i = start; i < end; i += step) {
-        yield i
-    }
-}
-
-export { polar, vector_sum, in_triangle, deg2rad, sin, cos, range, linspace }

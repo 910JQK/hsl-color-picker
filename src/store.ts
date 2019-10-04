@@ -1,41 +1,69 @@
 import { createStore, compose, applyMiddleware } from 'redux'
 import { Epic, createEpicMiddleware, combineEpics } from 'redux-observable'
-import { delay, map } from 'rxjs/operators'
+import { map, filter, switchMap, takeUntil } from 'rxjs/operators'
 import Actions from './actions'
 
 type Action = Actions.Action
 let New = Actions.New
 
 interface State {
-    count: number
+    H: number,
+    S: number,
+    L: number
 }
 
 let initial: State = {
-    count: 0
+    H: 0,
+    S: 0,
+    L: 0
 }
 
 let reducers: { [type:string]: (s: State, a: Action) => State } = {
-    [Actions.INC]: (state, _): State => {
-        return { count: state.count + 1 }
-    },
-    [Actions.DEC]: (state, _): State => {
-        return { count: state.count - 1 }
+    [Actions.H_COMMIT]: (state, action): State => {
+        let H = (action as Actions.H_Commit).hue
+        if (!(0 <= H && H < 360)) {
+            throw new Error(`invalid hue value ${H}`)
+        }
+        return {...state, H }
     }
 }
 
 let epics: Array<Epic<Action,Action,State>> = [
     ($action, _) => {
-        let async_increment = $action.ofType(Actions.INC_ASYNC)
-        return async_increment.pipe (
-            delay(1000),
-            map(_ => New<Actions.Inc>({ type: Actions.INC }))
+        return $action.ofType(Actions.H_MOUSE_DOWN).pipe (
+            map(down => (down as Actions.H_MouseDown)),
+            filter(down => !down.on_cursor),
+            map(down => New<Actions.H_Commit>({
+                type: Actions.H_COMMIT,
+                hue: (-down.angle + 360) % 360
+            }))
         )
     },
     ($action, _) => {
-        let async_decrement = $action.ofType(Actions.DEC_ASYNC)
-        return async_decrement.pipe (
-            delay(500),
-            map(_ => New<Actions.Dec>({ type: Actions.DEC }))
+        return $action.ofType(Actions.H_MOUSE_DOWN).pipe (
+            switchMap(down => $action.ofType(Actions.H_MOUSE_MOVE).pipe (
+                takeUntil($action.ofType(Actions.MOUSE_UP)),
+                map(move => ({
+                    down: (down as Actions.H_MouseDown),
+                    move: (move as Actions.H_MouseMove)
+                }))
+            )),
+            map(events => {
+                let { angle } = events.move
+                if (events.down.on_cursor) {
+                    let delta = events.down.cursor_angle! - events.down.angle
+                    let revised = angle + delta
+                    return New<Actions.H_Commit>({
+                        type: Actions.H_COMMIT,
+                        hue: (-revised + 360) % 360
+                    })
+                } else {
+                    return New<Actions.H_Commit>({
+                        type: Actions.H_COMMIT,
+                        hue: (-angle + 360) % 360
+                    })
+                }
+            })
         )
     }
 ]
