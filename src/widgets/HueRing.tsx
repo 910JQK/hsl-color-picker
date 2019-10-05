@@ -64,7 +64,7 @@ function HueRing (props: Props): JSX.Element {
         ctx.moveTo(...vector_sum(center, polar(INNER, -val)))
         ctx.lineTo(...vector_sum(center, polar(OUTER, -val)))
         ctx.lineWidth = 6.0
-        ctx.strokeStyle = `hsla(0, 0%, 95%, 0.5)`
+        ctx.strokeStyle = 'hsla(0, 0%, 95%, 0.5)'
         ctx.stroke()
         ctx.beginPath()
         ctx.moveTo(...cursor_point)
@@ -100,7 +100,8 @@ function HueRing (props: Props): JSX.Element {
                 height={SIZE} width={SIZE}
                 onMouseDown={mouse_down_handler}
                 onMouseMove={mouse_move_handler}
-                style={{height:'300px',width:'300px'}} />
+                style={{height:'300px',width:'300px'}}>
+        </canvas>
     )
 }
 
