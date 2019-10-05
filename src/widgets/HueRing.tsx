@@ -32,10 +32,10 @@ function HueRing (props: Props): JSX.Element {
     let canvas = useRef<HTMLCanvasElement>(null)
     let center: Vector = [CENTER, CENTER]
     let val = props.H
-    let cursor_point = vector_sum(center, polar(OUTER, -val))
-    let a = vector_sum(cursor_point, polar(CURSOR, -val+30))
-    let b = vector_sum(cursor_point, polar(CURSOR, -val-30))
-    let cursor: Triangle = [cursor_point, a, b]
+    let cursor_contact = vector_sum(center, polar(OUTER, -val))
+    let a = vector_sum(cursor_contact, polar(CURSOR, -val+30))
+    let b = vector_sum(cursor_contact, polar(CURSOR, -val-30))
+    let cursor: Triangle = [cursor_contact, a, b]
     useEffect(() => {
         let ctx = canvas.current!.getContext('2d')!
         ctx.clearRect(0, 0, SIZE, SIZE)
@@ -67,7 +67,7 @@ function HueRing (props: Props): JSX.Element {
         ctx.strokeStyle = 'hsla(0, 0%, 95%, 0.5)'
         ctx.stroke()
         ctx.beginPath()
-        ctx.moveTo(...cursor_point)
+        ctx.moveTo(...cursor_contact)
         ctx.lineTo(...a)
         ctx.lineTo(...b)
         ctx.fillStyle = 'hsl(0, 0%, 75%)'

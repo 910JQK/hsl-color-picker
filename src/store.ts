@@ -1,7 +1,9 @@
 import { createStore, compose, applyMiddleware } from 'redux'
 import { Epic, createEpicMiddleware, combineEpics } from 'redux-observable'
+import { Observable } from 'rxjs'
 import { map, filter, switchMap, takeUntil } from 'rxjs/operators'
 import Actions from './actions'
+import { clamp } from './utils'
 
 type Action = Actions.Action
 let New = Actions.New
@@ -20,26 +22,50 @@ let initial: State = {
 
 let reducers: { [type:string]: (s: State, a: Action) => State } = {
     [Actions.H_COMMIT]: (state, action): State => {
-        let H = (action as Actions.H_Commit).hue
+        let H = (action as Actions.H_Commit).H
         if (!(0 <= H && H < 360)) {
             throw new Error(`invalid hue value ${H}`)
         }
-        return {...state, H }
+        return { ...state, H }
+    },
+    [Actions.S_COMMIT]: (state, action): State => {
+        let S = (action as Actions.S_Commit).S
+        if (!(0 <= S && S <= 100)) {
+            throw new Error(`invalid saturation value ${S}`)
+        }
+        return { ...state, S }
+    },
+    [Actions.L_COMMIT]: (state, action): State => {
+        let L = (action as Actions.L_Commit).L
+        if (!(0 <= L && L <= 100)) {
+            throw new Error(`invalid lightness value ${L}`)
+        }
+        return { ...state, L }
+    },
+    [Actions.SL_COMMIT]: (state, action): State => {
+        let { S, L } = (action as Actions.SL_Commit)
+        if (!(0 <= S && S <= 100)) {
+            throw new Error(`invalid saturation value ${S}`)
+        }
+        if (!(0 <= L && L <= 100)) {
+            throw new Error(`invalid lightness value ${L}`)
+        }
+        return { ...state, S, L }
     }
 }
 
 let epics: Array<Epic<Action,Action,State>> = [
-    ($action, _) => {
+    function HandleHueRingClick ($action, _): Observable<Action> {
         return $action.ofType(Actions.H_MOUSE_DOWN).pipe (
             map(down => (down as Actions.H_MouseDown)),
             filter(down => !down.on_cursor),
             map(down => New<Actions.H_Commit>({
                 type: Actions.H_COMMIT,
-                hue: (-down.angle + 360) % 360
+                H: (-down.angle + 360) % 360
             }))
         )
     },
-    ($action, _) => {
+    function HandleHueRingDrag ($action, _): Observable<Action> {
         return $action.ofType(Actions.H_MOUSE_DOWN).pipe (
             switchMap(down => $action.ofType(Actions.H_MOUSE_MOVE).pipe (
                 takeUntil($action.ofType(Actions.MOUSE_UP)),
@@ -55,14 +81,75 @@ let epics: Array<Epic<Action,Action,State>> = [
                     let revised = angle + delta
                     return New<Actions.H_Commit>({
                         type: Actions.H_COMMIT,
-                        hue: (-revised + 360) % 360
+                        H: (-revised + 360) % 360
                     })
                 } else {
                     return New<Actions.H_Commit>({
                         type: Actions.H_COMMIT,
-                        hue: (-angle + 360) % 360
+                        H: (-angle + 360) % 360
                     })
                 }
+            })
+        )
+    },
+    function HandleSlicePlaneClick ($action, _): Observable<Action> {
+        return $action.ofType(Actions.SL_MOUSE_DOWN).pipe (
+            map(down => (down as Actions.SL_MouseDown)),
+            filter(down => down.on_cursor == 'Neither'),
+            map(down => New<Actions.SL_Commit>({
+                type: Actions.SL_COMMIT,
+                S: clamp(down.x, 0, 100),
+                L: clamp(down.y, 0, 100)
+            }))
+        )
+    },
+    function HandleSlicePlaneCursorDrag ($action, _): Observable<Action> {
+        return $action.ofType(Actions.SL_MOUSE_DOWN).pipe (
+            map(down => (down as Actions.SL_MouseDown)),
+            filter(down => down.on_cursor != 'Neither'),
+            switchMap(down => $action.ofType(Actions.SL_MOUSE_MOVE).pipe (
+                takeUntil($action.ofType(Actions.MOUSE_UP)),
+                map(move => ({
+                    down,
+                    move: (move as Actions.SL_MouseMove)
+                }))
+            )),
+            map(events => {
+                let { down, move } = events
+                if (down.on_cursor == 'S') {
+                    let delta = down.cursor_x! - down.x
+                    let S = clamp(move.x + delta, 0, 100)
+                    return New<Actions.S_Commit>({
+                        type: Actions.S_COMMIT,
+                        S
+                    })
+                } else if (down.on_cursor == 'L') {
+                    let delta = down.cursor_y! - down.y
+                    let L = clamp(move.y + delta, 0, 100)
+                    return New<Actions.L_Commit>({
+                        type:Actions.L_COMMIT,
+                        L
+                    })
+                } else {
+                    throw new Error('impossible branch')
+                }
+            })
+        )
+    },
+    function HandleSlicePlanePointDrag ($action, _): Observable<Action> {
+        return $action.ofType(Actions.SL_MOUSE_DOWN).pipe (
+            map(down => (down as Actions.SL_MouseDown)),
+            filter(down => down.on_cursor == 'Neither'),
+            switchMap((_ :any) => $action.ofType(Actions.SL_MOUSE_MOVE).pipe (
+                takeUntil($action.ofType(Actions.MOUSE_UP))
+            )),
+            map(move => {
+                let { x, y } = (move as Actions.SL_MouseMove)
+                return New<Actions.SL_Commit>({
+                    type: Actions.SL_COMMIT,
+                    S: clamp(x, 0, 100),
+                    L: clamp(y, 0, 100)
+                })
             })
         )
     }

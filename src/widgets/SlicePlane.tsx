@@ -2,7 +2,13 @@ import React, { useRef, useEffect } from 'react'
 import { Dispatch } from 'redux'
 import { connect } from 'react-redux'
 import { State, New, Action, Actions } from '../store'
-import { range, Vector, vector_diff, vector_sum, polar, deg2rad } from '../utils'
+import {
+    Vector, Rectangle, Triangle,
+    range, polar, deg2rad,
+    vector_diff, vector_sum,
+    get_event_point,
+    in_triangle, in_rectangle
+} from '../utils'
 
 const SIZE = 600
 const CENTER = SIZE / 2
@@ -10,6 +16,7 @@ const R = SIZE / 2.5
 const CURSOR = R * (1 - 0.618) * 0.618
 
 const Transform = (v: Vector): Vector => [v[0], (SIZE - v[1])]
+const InverseTransform = Transform
 const Gradients = (() => {
     let cached: Array<CanvasGradient> | null = null
     let cached_ctx: CanvasRenderingContext2D | null = null
@@ -41,7 +48,10 @@ interface PropsFromState {
 }
 
 interface PropsFromDispatch {
-
+    mouse_down_on_plane: (p: Vector) => void,
+    mouse_down_on_s_cursor: (p: Vector, current: number) => void,
+    mouse_down_on_l_cursor: (p: Vector, current: number) => void,
+    mouse_move: (p: Vector) => void
 }
 
 interface Props extends PropsFromState, PropsFromDispatch {}
@@ -49,20 +59,25 @@ interface Props extends PropsFromState, PropsFromDispatch {}
 
 function SlicePlane (props: Props): JSX.Element {
     let canvas = useRef<HTMLCanvasElement>(null)
+    let center: Vector = [CENTER, CENTER]
+    let origin = vector_diff(center, [R, R])
+    let topLeft = vector_sum(origin, [0, 2*R])
+    let topRight = vector_sum(topLeft, [2*R, 0])
+    let bottomRight = vector_sum(topRight, [0, -2*R])
+    let plane: Rectangle = [origin, topLeft, topRight, bottomRight]
+    let height = topLeft[1] - origin[1]
+    let width = bottomRight[0] - origin[0]
+    let S_cursor_contact = vector_sum(center, [(props.S/100)*2*R - R, -R])
+    let S_a = vector_sum(S_cursor_contact, polar(CURSOR, 270+30))
+    let S_b = vector_sum(S_cursor_contact, polar(CURSOR, 270-30))
+    let S_cursor: Triangle = [S_cursor_contact, S_a, S_b]
+    let L_cursor_contact = vector_sum(center, [R, (props.L/100)*2*R - R])
+    let L_a = vector_sum(L_cursor_contact, polar(CURSOR, 30))
+    let L_b = vector_sum(L_cursor_contact, polar(CURSOR, -30))
+    let L_cursor: Triangle = [L_cursor_contact, L_a, L_b]
     useEffect(() => {
         let ctx = canvas.current!.getContext('2d')!
         ctx.clearRect(0, 0, SIZE, SIZE)
-        let center: Vector = [CENTER, CENTER]
-        let origin = vector_diff(center, [R, R])
-        let topLeft = vector_sum(origin, [0, 2*R])
-        let topRight = vector_sum(topLeft, [2*R, 0])
-        let bottomRight = vector_sum(topRight, [0, -2*R])
-        let topY = topLeft[1]
-        let bottomY = origin[1]
-        let height = topY - bottomY
-        let rightX = bottomRight[0]
-        let leftX = origin[0]
-        let width = rightX - leftX
         let H = Math.floor(props.H)
         for (let S of range(0, 101)) {
             let bar_width = width / 101
@@ -86,43 +101,63 @@ function SlicePlane (props: Props): JSX.Element {
         ctx.lineWidth = 3.0
         ctx.strokeStyle = `hsl(0, 0%, 94%)`
         ctx.stroke()
-        let S_cursor = vector_sum(center, [(props.S/100)*2*R - R, -R])
-        let S_a = vector_sum(S_cursor, polar(CURSOR, 270+30))
-        let S_b = vector_sum(S_cursor, polar(CURSOR, 270-30))
         ctx.beginPath()
-        ctx.moveTo(...Transform(S_cursor))
+        ctx.moveTo(...Transform(S_cursor_contact))
         ctx.lineTo(...Transform(S_a))
         ctx.lineTo(...Transform(S_b))
         ctx.fillStyle = 'hsl(0, 0%, 75%)'
         ctx.fill()
-        let L_cursor = vector_sum(center, [R, (props.L/100)*2*R - R])
-        let L_a = vector_sum(L_cursor, polar(CURSOR, 30))
-        let L_b = vector_sum(L_cursor, polar(CURSOR, -30))
         ctx.beginPath()
-        ctx.moveTo(...Transform(L_cursor))
+        ctx.moveTo(...Transform(L_cursor_contact))
         ctx.lineTo(...Transform(L_a))
         ctx.lineTo(...Transform(L_b))
         ctx.fillStyle = 'hsl(0, 0%, 75%)'
         ctx.fill()
-        let point = [S_cursor[0], L_cursor[1]]
+        let point = Transform([S_cursor_contact[0], L_cursor_contact[1]])
         ctx.beginPath()
-        ctx.moveTo(...Transform(S_cursor))
-        ctx.lineTo(...Transform(vector_sum(S_cursor, [0, 2*R])))
+        ctx.moveTo(...Transform(S_cursor_contact))
+        ctx.lineTo(...Transform(vector_sum(S_cursor_contact, [0, 2*R])))
         ctx.lineWidth = 6.0
         ctx.strokeStyle = 'hsla(0, 0%, 95%, 0.5)'
         ctx.stroke()
         ctx.beginPath()
-        ctx.moveTo(...Transform(L_cursor))
-        ctx.lineTo(...Transform(vector_sum(L_cursor, [-2*R, 0])))
+        ctx.moveTo(...Transform(L_cursor_contact))
+        ctx.lineTo(...Transform(vector_sum(L_cursor_contact, [-2*R, 0])))
         ctx.stroke()
         ctx.beginPath()
         ctx.arc(point[0], point[1], 4.0, 0, deg2rad(360))
         ctx.fillStyle = ctx.strokeStyle = 'hsla(0, 0%, 95%, 0.5)'
         ctx.fill(); ctx.stroke()
     })
+    let get_adjusted_points = (ev: React.MouseEvent): [Vector, Vector] => {
+        let size = canvas.current!.offsetWidth
+        let ratio = size / SIZE
+        let point = InverseTransform(get_event_point(ev, ratio))
+        let rv = vector_diff(point, origin)
+        let scaled_point: Vector = [rv[0]*100/(2*R), rv[1]*100/(2*R)]
+        return [point, scaled_point]
+    }
+    let mouse_down_handler = (ev: React.MouseEvent): void => {
+        let [point, scaled_point] = get_adjusted_points(ev)
+        if (in_rectangle(plane, point)) {
+            props.mouse_down_on_plane(scaled_point)
+        } else if (in_triangle(S_cursor, point)) {
+            props.mouse_down_on_s_cursor(scaled_point, props.S)
+        } else if (in_triangle(L_cursor, point)) {
+            props.mouse_down_on_l_cursor(scaled_point, props.L)
+        } else {
+            // do nothing, swallow the event
+        }
+    }
+    let mouse_move_handler = (ev: React.MouseEvent): void => {
+        let [_, scaled_point] = get_adjusted_points(ev); _
+        props.mouse_move(scaled_point)
+    }
     return (
         <canvas className="slice_plane" ref={canvas}
                 height={SIZE} width={SIZE}
+                onMouseDown={mouse_down_handler}
+                onMouseMove={mouse_move_handler}
                 style={{height:'300px',width:'300px'}} >
         </canvas>
     )
@@ -134,9 +169,41 @@ function state2props (state: State): PropsFromState {
 }
 
 function dispatch2props (dispatch: Dispatch<Action>): PropsFromDispatch {
-    New
-    Actions
-    return {}
+    return {
+        mouse_down_on_plane (p: Vector): void {
+            dispatch(New<Actions.SL_MouseDown>({
+                type: Actions.SL_MOUSE_DOWN,
+                x: p[0],
+                y: p[1],
+                on_cursor:'Neither'
+            }))
+        },
+        mouse_down_on_s_cursor (p: Vector, current: number): void {
+            dispatch(New<Actions.SL_MouseDown>({
+                type: Actions.SL_MOUSE_DOWN,
+                x: p[0],
+                y: p[1],
+                on_cursor: 'S',
+                cursor_x: current
+            }))
+        },
+        mouse_down_on_l_cursor (p: Vector, current: number): void {
+            dispatch(New<Actions.SL_MouseDown>({
+                type: Actions.SL_MOUSE_DOWN,
+                x: p[0],
+                y: p[1],
+                on_cursor: 'L',
+                cursor_y: current
+            }))
+        },
+        mouse_move (p: Vector): void {
+            dispatch(New<Actions.SL_MouseMove>({
+                type: Actions.SL_MOUSE_MOVE,
+                x: p[0],
+                y: p[1]
+            }))
+        }
+    }
 }
 
 export default connect(state2props, dispatch2props)(SlicePlane)
