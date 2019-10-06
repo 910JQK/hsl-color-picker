@@ -4,7 +4,7 @@ import { connect } from 'react-redux'
 import { State, New, Action, Actions } from '../store'
 import {
     Vector, Triangle,
-    range, deg2rad, polar,
+    range, linspace, deg2rad, polar,
     vector_sum, vector_diff, incline_angle, norm,
     in_triangle, get_event_point
 } from '../utils'
@@ -14,6 +14,10 @@ const CENTER = SIZE / 2
 const OUTER = SIZE / 2.5
 const INNER = SIZE / 2.5 / 1.618
 const CURSOR = (OUTER - INNER) / 1.618
+const SCALE = CURSOR * (1.732 / 2)
+const SCALE_R = INNER * 0.8
+const SCALE_FONT = `${Math.floor(SCALE)/2.4}px sans-serif`
+const SCALE_FONT_HIGHLIGHT = `${Math.floor(SCALE)/2.2}px sans-serif`
 
 interface PropsFromState {
     H: number
@@ -59,6 +63,20 @@ function HueRing (props: Props): JSX.Element {
             ctx.lineWidth = 3.0
             ctx.strokeStyle = `hsl(0, 0%, 94%)`
             ctx.stroke()
+        }
+        for (let theta of linspace(0, 360, 30)) {
+            let p = vector_sum(center, polar(SCALE_R, -theta))
+            let highlight = (theta <= val && val < theta+30)
+            let baseline: CanvasTextBaseline = (
+                theta == 0? 'middle':
+                0 < theta && theta < 180? 'top':
+                theta == 180? 'middle': 'bottom'
+            )
+            ctx.font = highlight? SCALE_FONT_HIGHLIGHT: SCALE_FONT
+            ctx.textAlign = 'center'
+            ctx.textBaseline = baseline
+            ctx.fillStyle = highlight? 'red': 'hsl(0, 0%, 5%)'
+            ctx.fillText(theta.toString(), ...p)
         }
         /*
         ctx.beginPath()

@@ -120,7 +120,7 @@ function get_event_point (ev: MouseEvent, ratio: number): Vector {
 
 export {
     Vector, Triangle, Rectangle,
-    range,
+    range, linspace,
     clamp,
     deg2rad, polar,
     vector_sum, vector_diff,

@@ -154,18 +154,6 @@ function SlicePlane (props: Props): JSX.Element {
         ctx.fillStyle = 'hsl(0, 0%, 75%)'
         ctx.fill()
         let point = Transform([S_cursor_contact[0], L_cursor_contact[1]])
-        /*
-        ctx.beginPath()
-        ctx.moveTo(...Transform(S_cursor_contact))
-        ctx.lineTo(...Transform(vector_sum(S_cursor_contact, [0, 2*R])))
-        ctx.lineWidth = 6.0
-        ctx.strokeStyle = 'hsla(0, 0%, 95%, 0.5)'
-        ctx.stroke()
-        ctx.beginPath()
-        ctx.moveTo(...Transform(L_cursor_contact))
-        ctx.lineTo(...Transform(vector_sum(L_cursor_contact, [-2*R, 0])))
-        ctx.stroke()
-        */
         ctx.beginPath()
         ctx.arc(point[0], point[1], 12.0, 0, deg2rad(360))
         ctx.lineWidth = 2.0
