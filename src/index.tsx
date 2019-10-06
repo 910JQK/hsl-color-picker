@@ -4,6 +4,7 @@ import { Provider } from 'react-redux'
 import store, { New, Actions } from './store'
 import HueRing from './widgets/HueRing'
 import SlicePlane from './widgets/SlicePlane'
+import './styles/global.css'
 
 function ColorPicker (): JSX.Element {
     let on_mouse_up = () => {
@@ -17,9 +18,11 @@ function ColorPicker (): JSX.Element {
     })
     return (
         <Provider store={store} >
-            <h2>HSL Color Picker</h2>
-            <HueRing />
-            <SlicePlane />
+            <h1 className="title">HSL Color Picker</h1>
+            <div className="widgets-wrapper">
+                <HueRing />
+                <SlicePlane />
+            </div>
         </Provider>
     )
 }

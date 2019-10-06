@@ -9,6 +9,7 @@ import {
     get_event_point,
     in_triangle, in_rectangle,
 } from '../utils'
+import '../styles/global.css'
 
 const SIZE = 600
 const CENTER = SIZE / 2
@@ -219,10 +220,17 @@ function SlicePlane (props: Props): JSX.Element {
         }
     }
     return (
-        <canvas className="slice_plane" ref={canvas}
-                height={SIZE} width={SIZE}
-                style={{height:'300px',width:'300px'}} >
-        </canvas>
+        <div className="slice-plane-widget">
+            <canvas className="slice-plane" ref={canvas}
+                    height={SIZE} width={SIZE}>
+            </canvas>
+            <div className="value-display">
+                S = {Math.floor(props.S)}%, L = {Math.floor(props.L)}%
+            </div>
+            <div className="hotkey-tip">
+                [←] S-- | [→] S++ | [↓] L-- | [↑] L++
+            </div>
+        </div>
     )
 }
 

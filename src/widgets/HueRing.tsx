@@ -8,6 +8,7 @@ import {
     vector_sum, vector_diff, incline_angle, norm,
     in_triangle, get_event_point
 } from '../utils'
+import '../styles/global.css'
 
 const SIZE = 600
 const CENTER = SIZE / 2
@@ -133,10 +134,17 @@ function HueRing (props: Props): JSX.Element {
         }
     }
     return (
-        <canvas className="hue_ring" ref={canvas}
-                height={SIZE} width={SIZE}
-                style={{height:'300px',width:'300px'}}>
-        </canvas>
+        <div className="hue-ring-widget">
+            <canvas className="hue-ring" ref={canvas}
+                    height={SIZE} width={SIZE}>
+            </canvas>
+            <div className="value-display">
+                H = {Math.floor(props.H)}
+            </div>
+            <div className="hotkey-tip">
+                [-] H-- | [=] H++
+            </div>
+        </div>
     )
 }
 

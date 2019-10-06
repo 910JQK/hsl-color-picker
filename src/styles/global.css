@@ -1,0 +1,46 @@
+:root {
+    --widget-size: 300px;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.title {
+    text-align: center;
+}
+
+.widgets-wrapper {
+    display: flex;
+}
+
+.hue-ring-widget {
+    width: var(--widget-size);
+}
+
+.hue-ring {
+    width: var(--widget-size);
+    height: var(--widget-size);
+}
+
+.value-display {
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+.hotkey-tip {
+    font-family: 'monospace';
+    text-align: center;
+    padding: 0.6rem 0rem;
+}
+
+.slice-plane-widget {
+    width: var(--widget-size);
+}
+
+.slice-plane {
+    width: var(--widget-size);
+    height: var(--widget-size);
+}
