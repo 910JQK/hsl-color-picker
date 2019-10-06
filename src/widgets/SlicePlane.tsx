@@ -54,7 +54,11 @@ interface PropsFromDispatch {
     mouse_down_on_plane: (p: Vector) => void,
     mouse_down_on_s_cursor: (p: Vector, current: number) => void,
     mouse_down_on_l_cursor: (p: Vector, current: number) => void,
-    mouse_move: (p: Vector) => void
+    mouse_move: (p: Vector) => void,
+    s_increase: () => void,
+    s_decrease: () => void,
+    l_increase: () => void,
+    l_decrease: () => void
 }
 
 interface Props extends PropsFromState, PropsFromDispatch {}
@@ -165,6 +169,12 @@ function SlicePlane (props: Props): JSX.Element {
         ctx.strokeStyle = 'hsl(0, 0%, 5%)'
         ctx.stroke()
     })
+    useEffect(() => {
+        document.addEventListener('keydown', key_down_handler)
+        return () => {
+            document.removeEventListener('keydown', key_down_handler)
+        }
+    })
     let get_adjusted_points = (ev: React.MouseEvent): [Vector, Vector] => {
         let size = canvas.current!.offsetWidth
         let ratio = size / SIZE
@@ -188,6 +198,17 @@ function SlicePlane (props: Props): JSX.Element {
     let mouse_move_handler = (ev: React.MouseEvent): void => {
         let [_, scaled_point] = get_adjusted_points(ev); _
         props.mouse_move(scaled_point)
+    }
+    let key_down_handler = (ev: KeyboardEvent): void => {
+        if (ev.key == 'ArrowRight') {
+            props.s_increase()
+        } else if (ev.key == 'ArrowLeft') {
+            props.s_decrease()
+        } else if (ev.key == 'ArrowUp') {
+            props.l_increase()
+        } else if (ev.key == 'ArrowDown') {
+            props.l_decrease()
+        }
     }
     return (
         <canvas className="slice_plane" ref={canvas}
@@ -237,6 +258,30 @@ function dispatch2props (dispatch: Dispatch<Action>): PropsFromDispatch {
                 type: Actions.SL_MOUSE_MOVE,
                 x: p[0],
                 y: p[1]
+            }))
+        },
+        s_increase (): void {
+            dispatch(New<Actions.S_Adjust>({
+                type: Actions.S_ADJUST,
+                is_increment: true
+            }))
+        },
+        s_decrease (): void {
+            dispatch(New<Actions.S_Adjust>({
+                type: Actions.S_ADJUST,
+                is_increment: false
+            }))
+        },
+        l_increase (): void {
+            dispatch(New<Actions.L_Adjust>({
+                type: Actions.L_ADJUST,
+                is_increment: true
+            }))
+        },
+        l_decrease (): void {
+            dispatch(New<Actions.L_Adjust>({
+                type: Actions.L_ADJUST,
+                is_increment: false
             }))
         }
     }

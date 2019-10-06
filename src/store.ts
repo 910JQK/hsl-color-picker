@@ -51,6 +51,30 @@ let reducers: { [type:string]: (s: State, a: Action) => State } = {
             throw new Error(`invalid lightness value ${L}`)
         }
         return { ...state, S, L }
+    },
+    [Actions.H_ADJUST]: (state, action): State => {
+        let H = (
+            (action as Actions.H_Adjust).is_increment?
+            Math.floor(state.H + 1) % 360:
+            (Math.ceil(state.H - 1) + 360) % 360
+        )
+        return (H != state.H)? { ...state, H }: state
+    },
+    [Actions.S_ADJUST]: (state, action): State => {
+        let S = (
+            (action as Actions.S_Adjust).is_increment?
+            clamp(Math.floor(state.S + 1), 0, 100):
+            clamp(Math.ceil(state.S - 1), 0, 100)
+        )
+        return (S != state.S)? { ...state, S }: state
+    },
+    [Actions.L_ADJUST]: (state, action): State => {
+        let L = (
+            (action as Actions.L_Adjust).is_increment?
+            clamp(Math.floor(state.L + 1), 0, 100):
+            clamp(Math.ceil(state.L - 1), 0, 100)
+        )
+        return (L != state.L)? { ...state, L }: state
     }
 }
 

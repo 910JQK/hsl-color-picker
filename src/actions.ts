@@ -9,6 +9,9 @@ namespace Actions {
     export const S_COMMIT = 'S_COMMIT'
     export const L_COMMIT = 'L_COMMIT'
     export const SL_COMMIT = 'SL_COMMIT'
+    export const H_ADJUST = 'H_ADJUST'
+    export const S_ADJUST = 'S_ADJUST'
+    export const L_ADJUST = 'L_ADJUST'
 
     export interface Action {
         type: string
@@ -64,6 +67,22 @@ namespace Actions {
         type: typeof SL_COMMIT,
         S: number,
         L: number
+    }
+
+    interface Adjust {
+        is_increment: boolean
+    }
+
+    export interface H_Adjust extends Action, Adjust {
+        type: typeof H_ADJUST
+    }
+
+    export interface S_Adjust extends Action, Adjust {
+        type: typeof S_ADJUST
+    }
+
+    export interface L_Adjust extends Action, Adjust {
+        type:typeof L_ADJUST
     }
 
     export function New<T extends Action> (action: T): Action {

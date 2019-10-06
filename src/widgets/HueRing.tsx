@@ -26,7 +26,9 @@ interface PropsFromState {
 interface PropsFromDispatch {
     mouse_down_on_ring: (angle: number) => void,
     mouse_down_on_cursor: (angle: number, cursor_angle: number) => void,
-    mouse_move: (angle: number) => void
+    mouse_move: (angle: number) => void,
+    increase: () => void,
+    decrease: () => void
 }
 
 interface Props extends PropsFromState, PropsFromDispatch {}
@@ -80,20 +82,18 @@ function HueRing (props: Props): JSX.Element {
             ctx.fillStyle = highlight? 'red': 'hsl(0, 0%, 5%)'
             ctx.fillText(theta.toString(), ...p)
         }
-        /*
-        ctx.beginPath()
-        ctx.moveTo(...vector_sum(center, polar(INNER, -val)))
-        ctx.lineTo(...vector_sum(center, polar(OUTER, -val)))
-        ctx.lineWidth = 6.0
-        ctx.strokeStyle = 'hsla(0, 0%, 95%, 0.5)'
-        ctx.stroke()
-        */
         ctx.beginPath()
         ctx.moveTo(...cursor_contact)
         ctx.lineTo(...a)
         ctx.lineTo(...b)
         ctx.fillStyle = 'hsl(0, 0%, 75%)'
         ctx.fill()
+    })
+    useEffect(() => {
+        document.addEventListener('keydown', key_down_handler)
+        return () => {
+            document.removeEventListener('keydown', key_down_handler)
+        }
     })
     let mouse_down_handler = (ev: React.MouseEvent) => {
         let size = canvas.current!.offsetWidth
@@ -116,6 +116,13 @@ function HueRing (props: Props): JSX.Element {
         let p = get_event_point(ev, ratio)
         let rv = vector_diff(p, center)
         props.mouse_move(incline_angle(rv))
+    }
+    let key_down_handler = (ev: KeyboardEvent) => {
+        if (ev.key == '=') {
+            props.increase()
+        } else if (ev.key == '-') {
+            props.decrease()
+        }
     }
     return (
         <canvas className="hue_ring" ref={canvas}
@@ -152,6 +159,18 @@ function dispatch2props (dispatch: Dispatch<Action>): PropsFromDispatch {
             dispatch(New<Actions.H_MouseMove>({
                 type: Actions.H_MOUSE_MOVE,
                 angle
+            }))
+        },
+        increase (): void {
+            dispatch(New<Actions.H_Adjust>({
+                type: Actions.H_ADJUST,
+                is_increment: true
+            }))
+        },
+        decrease (): void {
+            dispatch(New<Actions.H_Adjust>({
+                type: Actions.H_ADJUST,
+                is_increment: false
             }))
         }
     }
