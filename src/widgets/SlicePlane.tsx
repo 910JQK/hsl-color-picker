@@ -14,6 +14,9 @@ const SIZE = 600
 const CENTER = SIZE / 2
 const R = SIZE / 2.5
 const CURSOR = R * (1 - 0.618) * 0.618
+const SCALE = CURSOR * (1.732 / 2)
+const SCALE_FONT = `${Math.floor(SCALE)/2.4}px sans-serif`
+const SCALE_FONT_HIGHLIGHT = `${Math.floor(SCALE)/2.1}px sans-serif`
 
 const Transform = (v: Vector): Vector => [v[0], (SIZE - v[1])]
 const InverseTransform = Transform
@@ -101,6 +104,43 @@ function SlicePlane (props: Props): JSX.Element {
         ctx.lineWidth = 3.0
         ctx.strokeStyle = `hsl(0, 0%, 94%)`
         ctx.stroke()
+        let sx = topLeft
+        let sy = origin
+        for (let n of range(0, 11)) {
+            let label = (n*10).toString()
+            let unit = 2*R / 10
+            let sxn = vector_sum(sx, [n*unit, 0])
+            let syn = vector_sum(sy, [0, n*unit])
+            let x_highlight = n*10 <= props.S && props.S < (n+1)*10
+            let y_highlight = n*10 <= props.L && props.L < (n+1)*10
+            let x_color = x_highlight? 'red': 'hsl(0, 0%, 5%)'
+            let y_color = y_highlight? 'red': 'hsl(0, 0%, 5%)'
+            let x_font = x_highlight? SCALE_FONT_HIGHLIGHT: SCALE_FONT
+            let y_font = y_highlight? SCALE_FONT_HIGHLIGHT: SCALE_FONT
+            ctx.beginPath()
+            ctx.moveTo(...Transform(sxn))
+            ctx.lineTo(...Transform(vector_sum(sxn, [0, SCALE])))
+            ctx.lineWidth = 1.0
+            ctx.strokeStyle = x_color
+            ctx.stroke()
+            ctx.beginPath()
+            ctx.moveTo(...Transform(syn))
+            ctx.lineTo(...Transform(vector_sum(syn, [-SCALE, 0])))
+            ctx.strokeStyle = y_color
+            ctx.stroke()
+            let tx = vector_sum(sxn, [unit/6, SCALE/2]) 
+            let ty = vector_sum(syn, [-SCALE/2, unit/6])
+            ctx.font = x_font
+            ctx.textAlign = 'left'
+            ctx.textBaseline = 'middle'
+            ctx.fillStyle = x_color
+            ctx.fillText(label, ...Transform(tx))
+            ctx.font = y_font
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'bottom'
+            ctx.fillStyle = y_color
+            ctx.fillText(label, ...Transform(ty))
+        }
         ctx.beginPath()
         ctx.moveTo(...Transform(S_cursor_contact))
         ctx.lineTo(...Transform(S_a))
@@ -114,6 +154,7 @@ function SlicePlane (props: Props): JSX.Element {
         ctx.fillStyle = 'hsl(0, 0%, 75%)'
         ctx.fill()
         let point = Transform([S_cursor_contact[0], L_cursor_contact[1]])
+        /*
         ctx.beginPath()
         ctx.moveTo(...Transform(S_cursor_contact))
         ctx.lineTo(...Transform(vector_sum(S_cursor_contact, [0, 2*R])))
@@ -124,10 +165,17 @@ function SlicePlane (props: Props): JSX.Element {
         ctx.moveTo(...Transform(L_cursor_contact))
         ctx.lineTo(...Transform(vector_sum(L_cursor_contact, [-2*R, 0])))
         ctx.stroke()
+        */
         ctx.beginPath()
-        ctx.arc(point[0], point[1], 4.0, 0, deg2rad(360))
-        ctx.fillStyle = ctx.strokeStyle = 'hsla(0, 0%, 95%, 0.5)'
-        ctx.fill(); ctx.stroke()
+        ctx.arc(point[0], point[1], 12.0, 0, deg2rad(360))
+        ctx.lineWidth = 2.0
+        ctx.strokeStyle = 'hsl(0, 0%, 95%)'
+        ctx.stroke()
+        ctx.beginPath()
+        ctx.arc(point[0], point[1], 14.0, 0, deg2rad(360))
+        ctx.lineWidth = 2.0
+        ctx.strokeStyle = 'hsl(0, 0%, 5%)'
+        ctx.stroke()
     })
     let get_adjusted_points = (ev: React.MouseEvent): [Vector, Vector] => {
         let size = canvas.current!.offsetWidth

@@ -60,12 +60,14 @@ function HueRing (props: Props): JSX.Element {
             ctx.strokeStyle = `hsl(0, 0%, 94%)`
             ctx.stroke()
         }
+        /*
         ctx.beginPath()
         ctx.moveTo(...vector_sum(center, polar(INNER, -val)))
         ctx.lineTo(...vector_sum(center, polar(OUTER, -val)))
         ctx.lineWidth = 6.0
         ctx.strokeStyle = 'hsla(0, 0%, 95%, 0.5)'
         ctx.stroke()
+        */
         ctx.beginPath()
         ctx.moveTo(...cursor_contact)
         ctx.lineTo(...a)
