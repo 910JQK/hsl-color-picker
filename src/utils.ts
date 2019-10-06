@@ -1,5 +1,3 @@
-import { MouseEvent } from 'react'
-
 type Vector = [number, number]
 type Triangle = [Vector, Vector, Vector]
 type Rectangle = [Vector, Vector, Vector, Vector]
@@ -110,10 +108,9 @@ function in_rectangle (r: Rectangle, v: Vector): boolean {
     )
 }
 
-function get_event_point (ev: MouseEvent, ratio: number): Vector {
-    let element = (ev.target as HTMLElement)
-    let x = ev.pageX - element.offsetLeft
-    let y = ev.pageY - element.offsetTop
+function get_event_point (ev: MouseEvent, element: HTMLElement, ratio: number): Vector {
+    let x = clamp(ev.pageX - element.offsetLeft, 0, element.offsetWidth)
+    let y = clamp(ev.pageY - element.offsetTop, 0, element.offsetHeight)
     return [x / ratio, y / ratio]
 }
 

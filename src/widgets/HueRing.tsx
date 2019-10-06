@@ -90,15 +90,22 @@ function HueRing (props: Props): JSX.Element {
         ctx.fill()
     })
     useEffect(() => {
+        let element = canvas.current!
         document.addEventListener('keydown', key_down_handler)
+        document.addEventListener('mousemove', mouse_move_handler)
+        element.addEventListener('mousedown', mouse_down_handler)
         return () => {
             document.removeEventListener('keydown', key_down_handler)
+            document.removeEventListener('mousemove', mouse_move_handler)
+            element.removeEventListener('mousedown', mouse_down_handler)
         }
     })
-    let mouse_down_handler = (ev: React.MouseEvent) => {
-        let size = canvas.current!.offsetWidth
+    let mouse_down_handler = (ev: MouseEvent) => {
+        let element = canvas.current!
+        if (ev.target !== element) { return }
+        let size = element.offsetWidth
         let ratio = size / SIZE
-        let p = get_event_point(ev, ratio)
+        let p = get_event_point(ev, element, ratio)
         let on_cursor = in_triangle(cursor, p)
         let rv = vector_diff(p, center)
         let angle = incline_angle(rv)
@@ -110,10 +117,11 @@ function HueRing (props: Props): JSX.Element {
             props.mouse_down_on_ring(angle)
         }
     }
-    let mouse_move_handler = (ev: React.MouseEvent) => {
+    let mouse_move_handler = (ev: MouseEvent) => {
+        let element = canvas.current!
         let size = canvas.current!.offsetWidth
         let ratio = size / SIZE
-        let p = get_event_point(ev, ratio)
+        let p = get_event_point(ev, element, ratio)
         let rv = vector_diff(p, center)
         props.mouse_move(incline_angle(rv))
     }
@@ -127,8 +135,6 @@ function HueRing (props: Props): JSX.Element {
     return (
         <canvas className="hue_ring" ref={canvas}
                 height={SIZE} width={SIZE}
-                onMouseDown={mouse_down_handler}
-                onMouseMove={mouse_move_handler}
                 style={{height:'300px',width:'300px'}}>
         </canvas>
     )

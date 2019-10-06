@@ -7,7 +7,7 @@ import {
     range, polar, deg2rad,
     vector_diff, vector_sum,
     get_event_point,
-    in_triangle, in_rectangle
+    in_triangle, in_rectangle,
 } from '../utils'
 
 const SIZE = 600
@@ -18,7 +18,7 @@ const SCALE = CURSOR * (1.732 / 2)
 const SCALE_FONT = `${Math.floor(SCALE)/2.4}px sans-serif`
 const SCALE_FONT_HIGHLIGHT = `${Math.floor(SCALE)/2.1}px sans-serif`
 
-const Transform = (v: Vector): Vector => [v[0], (SIZE - v[1])]
+const Transform = (v: Vector): Vector => [v[0], SIZE - v[1]]
 const InverseTransform = Transform
 const Gradients = (() => {
     let cached: Array<CanvasGradient> | null = null
@@ -64,16 +64,17 @@ interface PropsFromDispatch {
 interface Props extends PropsFromState, PropsFromDispatch {}
 
 
+let center: Vector = [CENTER, CENTER]
+let origin = vector_diff(center, [R, R])
+let topLeft = vector_sum(origin, [0, 2*R])
+let topRight = vector_sum(topLeft, [2*R, 0])
+let bottomRight = vector_sum(topRight, [0, -2*R])
+let plane: Rectangle = [origin, topLeft, topRight, bottomRight]
+let height = topLeft[1] - origin[1]
+let width = bottomRight[0] - origin[0]
+
 function SlicePlane (props: Props): JSX.Element {
     let canvas = useRef<HTMLCanvasElement>(null)
-    let center: Vector = [CENTER, CENTER]
-    let origin = vector_diff(center, [R, R])
-    let topLeft = vector_sum(origin, [0, 2*R])
-    let topRight = vector_sum(topLeft, [2*R, 0])
-    let bottomRight = vector_sum(topRight, [0, -2*R])
-    let plane: Rectangle = [origin, topLeft, topRight, bottomRight]
-    let height = topLeft[1] - origin[1]
-    let width = bottomRight[0] - origin[0]
     let S_cursor_contact = vector_sum(center, [(props.S/100)*2*R - R, -R])
     let S_a = vector_sum(S_cursor_contact, polar(CURSOR, 270+30))
     let S_b = vector_sum(S_cursor_contact, polar(CURSOR, 270-30))
@@ -170,20 +171,27 @@ function SlicePlane (props: Props): JSX.Element {
         ctx.stroke()
     })
     useEffect(() => {
+        let element = canvas.current!
         document.addEventListener('keydown', key_down_handler)
+        document.addEventListener('mousemove', mouse_move_handler)
+        element.addEventListener('mousedown', mouse_down_handler)
         return () => {
             document.removeEventListener('keydown', key_down_handler)
+            document.removeEventListener('mousemove', mouse_move_handler)
+            element.removeEventListener('mousedown', mouse_down_handler)
         }
     })
-    let get_adjusted_points = (ev: React.MouseEvent): [Vector, Vector] => {
-        let size = canvas.current!.offsetWidth
+    let get_adjusted_points = (ev: MouseEvent): [Vector, Vector] => {
+        let element = canvas.current!
+        let size = element.offsetWidth
         let ratio = size / SIZE
-        let point = InverseTransform(get_event_point(ev, ratio))
+        let point = InverseTransform(get_event_point(ev, element, ratio))
         let rv = vector_diff(point, origin)
         let scaled_point: Vector = [rv[0]*100/(2*R), rv[1]*100/(2*R)]
         return [point, scaled_point]
     }
-    let mouse_down_handler = (ev: React.MouseEvent): void => {
+    let mouse_down_handler = (ev: MouseEvent): void => {
+        if (ev.target !== canvas.current) { return }
         let [point, scaled_point] = get_adjusted_points(ev)
         if (in_rectangle(plane, point)) {
             props.mouse_down_on_plane(scaled_point)
@@ -195,7 +203,7 @@ function SlicePlane (props: Props): JSX.Element {
             // do nothing, swallow the event
         }
     }
-    let mouse_move_handler = (ev: React.MouseEvent): void => {
+    let mouse_move_handler = (ev: MouseEvent): void => {
         let [_, scaled_point] = get_adjusted_points(ev); _
         props.mouse_move(scaled_point)
     }
@@ -213,8 +221,6 @@ function SlicePlane (props: Props): JSX.Element {
     return (
         <canvas className="slice_plane" ref={canvas}
                 height={SIZE} width={SIZE}
-                onMouseDown={mouse_down_handler}
-                onMouseMove={mouse_move_handler}
                 style={{height:'300px',width:'300px'}} >
         </canvas>
     )
