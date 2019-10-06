@@ -66,7 +66,9 @@ function HueRing (props: Props): JSX.Element {
         }
         for (let theta of linspace(0, 360, 30)) {
             let p = vector_sum(center, polar(SCALE_R, -theta))
-            let highlight = (theta <= val && val < theta+30)
+            let dd = (val - theta + 360) % 360
+            let d = Math.min(dd, 360-dd)
+            let highlight = d < 15 || (d == 15 && val > theta)
             let baseline: CanvasTextBaseline = (
                 theta == 0? 'middle':
                 0 < theta && theta < 180? 'top':
