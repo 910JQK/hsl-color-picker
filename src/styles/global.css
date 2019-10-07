@@ -8,6 +8,12 @@ body {
     align-items: center;
 }
 
+#react-root {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 .title {
     text-align: center;
 }
@@ -31,7 +37,7 @@ body {
 }
 
 .hotkey-tip {
-    font-family: 'monospace';
+    font-family: monospace;
     text-align: center;
     padding: 0.6rem 0rem;
 }
@@ -43,4 +49,49 @@ body {
 .slice-plane {
     width: var(--widget-size);
     height: var(--widget-size);
+}
+
+.demo-widget {
+    display: flex;
+    margin: 0.8rem 0rem;
+}
+
+.demo {
+    flex-grow: 1;
+    flex-shrink: 0;
+    flex-basis: 0;
+    text-align: center;
+    padding: 0.5rem 1rem;
+    border: 1px solid black;
+    font-size: 1.25rem;
+}
+
+.demo-text-light {
+    background-color: black;
+}
+
+.demo-text-dark {
+    background: white;
+}
+
+.demo-bg-light {
+    color: white;
+}
+
+.demo-bg-dark {
+    color: black;
+}
+
+.output {
+    margin: 0.8rem 0rem;
+}
+
+.output-label, .output-value, .output-copy {
+    font-size: calc(1.2rem);
+    text-align: center;
+    font-family: monospace;
+}
+
+.output-value {
+    margin: 0rem 0.3rem;
 }

@@ -4,6 +4,8 @@ import { Provider } from 'react-redux'
 import store, { New, Actions } from './store'
 import HueRing from './widgets/HueRing'
 import SlicePlane from './widgets/SlicePlane'
+import Demo from './widgets/Demo'
+import Output from './widgets/Output'
 import './styles/global.css'
 
 function ColorPicker (): JSX.Element {
@@ -23,6 +25,8 @@ function ColorPicker (): JSX.Element {
                 <HueRing />
                 <SlicePlane />
             </div>
+            <Demo />
+            <Output />
         </Provider>
     )
 }

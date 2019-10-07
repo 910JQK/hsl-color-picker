@@ -21,6 +21,7 @@
     "webpack-dev-server": "^3.8.2"
   },
   "dependencies": {
+    "clipboard-polyfill": "^2.8.6",
     "react": "^16.10.1",
     "react-dom": "^16.10.1",
     "react-redux": "^7.1.1",
