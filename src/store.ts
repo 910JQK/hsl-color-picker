@@ -14,11 +14,23 @@ interface State {
     L: number
 }
 
-let initial: State = {
-    H: 0,
-    S: 0,
-    L: 0
-}
+let initial: State = (() => {
+    let saved = localStorage.getItem('state')
+    if (saved == null) {
+        return {
+            H: 0,
+            S: 0,
+            L: 0
+        }
+    } else {
+        let parsed = JSON.parse(saved)
+        return {
+            H: (0 <= parsed.H && parsed.H < 360)? parsed.H: 0,
+            S: (0 <= parsed.S && parsed.S <= 100)? parsed.S: 0,
+            L: (0 <= parsed.L && parsed.L <= 100)? parsed.L: 0
+        }
+    }
+})()
 
 let reducers: { [type:string]: (s: State, a: Action) => State } = {
     [Actions.H_COMMIT]: (state, action): State => {
@@ -194,7 +206,9 @@ let epics: Array<Epic<Action,Action,State>> = [
 
 let root_reducer = (state: State = initial, action: Action): State => {
     if (reducers[action.type]) {
-        return reducers[action.type](state, action)
+        let reduced = reducers[action.type](state, action)
+        localStorage.setItem('state', JSON.stringify(reduced))
+        return reduced
     } else {
         return state
     }
