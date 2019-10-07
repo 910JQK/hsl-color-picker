@@ -9,6 +9,7 @@ namespace Actions {
     export const S_COMMIT = 'S_COMMIT'
     export const L_COMMIT = 'L_COMMIT'
     export const SL_COMMIT = 'SL_COMMIT'
+    export const HSL_COMMIT = 'HSL_COMMIT'
     export const H_ADJUST = 'H_ADJUST'
     export const S_ADJUST = 'S_ADJUST'
     export const L_ADJUST = 'L_ADJUST'
@@ -65,6 +66,13 @@ namespace Actions {
 
     export interface SL_Commit extends Action {
         type: typeof SL_COMMIT,
+        S: number,
+        L: number
+    }
+
+    export interface HSL_Commit extends Action {
+        type: typeof HSL_COMMIT,
+        H: number,
         S: number,
         L: number
     }

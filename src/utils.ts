@@ -114,6 +114,115 @@ function get_event_point (ev: MouseEvent, element: HTMLElement, ratio: number): 
     return [x / ratio, y / ratio]
 }
 
+function rgb2hsl (rgb: [number, number, number]): [number, number, number] {
+
+    // Code Modified From: https://stackoverflow.com/questions/39118528/rgb-to-hsl-conversion
+    // see: https://en.wikipedia.org/wiki/RGB_color_model
+    // see: https://en.wikipedia.org/wiki/HSL_and_HSV
+
+    // returns the average of the supplied number arguments
+    function average(...theArgs: number[]): number {
+        return (
+            theArgs.length?
+                theArgs.reduce((p, c) => p + c, 0) / theArgs.length:
+                0
+        )
+    }
+
+    // expects R, G, B, Cmax and chroma to be in number interval [0, 1]
+    // returns undefined if chroma is 0, or a number interval [0, 360] degrees
+    function hue (
+        R: number, G: number, B: number,
+        Cmax: number, chroma: number
+    ): number | undefined {
+        if (chroma === 0) {
+            // assume grayscale to be red
+            return 0
+        }
+        let H = 0
+        if (Cmax === R) {
+            H = ((G - B) / chroma) % 6
+        } else if (Cmax === G) {
+            H = ((B - R) / chroma) + 2
+        } else if (Cmax === B) {
+            H = ((R - G) / chroma) + 4
+        }
+        H *= 60
+        return H < 0 ? H + 360 : H
+    }
+    
+    // expects R, G, B, Cmin, Cmax and chroma to be in number interval [0, 1]
+    // type is by default 'bi-hexcone' equation
+    // set 'luma601' or 'luma709' for alternatives
+    // see: https://en.wikipedia.org/wiki/Luma_(video)
+    // returns a number interval [0, 1]
+    function lightness (
+        R: number, G: number, B: number,
+        Cmin: number, Cmax: number, type: string = 'bi-hexcone'
+    ): number {
+        if (type === 'luma601') {
+            return (0.299 * R) + (0.587 * G) + (0.114 * B)
+        }
+        if (type === 'luma709') {
+            return (0.2126 * R) + (0.7152 * G) + (0.0772 * B)
+        }
+        return average(Cmin, Cmax)
+    }
+  
+    // expects L and chroma to be in number interval [0, 1]
+    // returns a number interval [0, 1]
+    function saturation(L: number, chroma: number): number {
+        return chroma === 0 ? 0 : chroma / (1 - Math.abs(2 * L - 1))
+    }
+  
+    // returns the value to a fixed number of digits
+    function toFixed (
+        value: number | undefined,
+        digits: number | undefined
+    ): number {
+        return Number (String (
+            (Number.isFinite(value!) && Number.isFinite(digits!))?
+                value!.toFixed(digits) : value!
+        ))
+    }
+  
+    // expects R, G, and B to be in number interval [0, 1]
+    function RGB2HSL (R: number, G: number, B: number): [number, number, number] {
+        const Cmin = Math.min(R, G, B)
+        const Cmax = Math.max(R, G, B)
+        const chroma = Cmax - Cmin
+        // default 'bi-hexcone' equation
+        const L = lightness(R, G, B, Cmin, Cmax)
+        // H in degrees interval [0, 360]
+        // L and S in interval [0, 1]
+        return [
+            Math.round(toFixed(hue(R, G, B, Cmax, chroma), 1)) % 360,
+            clamp(Math.round(100*toFixed(saturation(L, chroma), 3)), 0, 100),
+            clamp(Math.round(100*toFixed(L, 3)), 0, 100)
+        ]
+    }
+
+    let normalized: [number, number, number] = rgb.map(x => x / 255) as any
+    return RGB2HSL(...normalized)
+
+}
+
+function rgb_from_hex (rgb_str: string): [number, number, number] {
+    if (rgb_str.length == 3) {
+        return [
+            Number.parseInt(rgb_str[0] + rgb_str[0], 16),
+            Number.parseInt(rgb_str[1] + rgb_str[1], 16),
+            Number.parseInt(rgb_str[2] + rgb_str[2], 16)
+        ]
+    } else {
+        return [
+            Number.parseInt(rgb_str.slice(0, 2), 16),
+            Number.parseInt(rgb_str.slice(2, 4), 16),
+            Number.parseInt(rgb_str.slice(4, 6), 16)
+        ]
+    }
+}
+
 
 export {
     Vector, Triangle, Rectangle,
@@ -123,5 +232,6 @@ export {
     vector_sum, vector_diff,
     incline_angle, norm,
     in_triangle, in_rectangle,
-    get_event_point
+    get_event_point,
+    rgb2hsl, rgb_from_hex
 }

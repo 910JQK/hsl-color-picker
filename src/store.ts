@@ -52,6 +52,19 @@ let reducers: { [type:string]: (s: State, a: Action) => State } = {
         }
         return { ...state, S, L }
     },
+    [Actions.HSL_COMMIT]: (state, action): State => {
+        let { H, S, L } = (action as Actions.HSL_Commit)
+        if (!(0 <= H && H <= 360)) {
+            throw new Error(`invalid hue value ${H}`)
+        }
+        if (!(0 <= S && S <= 100)) {
+            throw new Error(`invalid saturation value ${S}`)
+        }
+        if (!(0 <= L && L <= 100)) {
+            throw new Error(`invalid lightness value ${L}`)
+        }
+        return { ...state, H, S, L }
+    },
     [Actions.H_ADJUST]: (state, action): State => {
         let H = (
             (action as Actions.H_Adjust).is_increment?

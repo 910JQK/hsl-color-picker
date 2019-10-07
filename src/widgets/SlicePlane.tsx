@@ -214,8 +214,10 @@ function SlicePlane (props: Props): JSX.Element {
         } else if (ev.key == 'ArrowLeft') {
             props.s_decrease()
         } else if (ev.key == 'ArrowUp') {
+            ev.preventDefault()
             props.l_increase()
         } else if (ev.key == 'ArrowDown') {
+            ev.preventDefault()
             props.l_decrease()
         }
     }
