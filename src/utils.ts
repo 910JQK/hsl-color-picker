@@ -134,7 +134,7 @@ function rgb2hsl (rgb: [number, number, number]): [number, number, number] {
     function hue (
         R: number, G: number, B: number,
         Cmax: number, chroma: number
-    ): number | undefined {
+    ): number {
         if (chroma === 0) {
             // assume grayscale to be red
             return 0
