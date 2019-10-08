@@ -8,6 +8,20 @@ import Demo from './widgets/Demo'
 import Output from './widgets/Output'
 import './styles/global.css'
 
+function check_firefox (): void {
+    if (navigator.userAgent.indexOf('Firefox') != -1) {
+        alert (
+            `It seems that you are using Firefox.
+            Unfortunately, Firefox has a bug on HTML5 <canvas> element
+            which makes this color picker program cause memory leak.
+            For details, see
+            https://bugzilla.mozilla.org/show_bug.cgi?id=1586495.`
+            .replace(/[ \t\n]{2,}/g, ' ')
+        )
+    }
+}
+check_firefox()
+
 function ColorPicker (): JSX.Element {
     let on_mouse_up = () => {
         store.dispatch(New<Actions.MouseUp>({
