@@ -12,7 +12,8 @@ function check_firefox (): void {
     if (navigator.userAgent.indexOf('Firefox') != -1) {
         alert (
             `It seems that you are using Firefox.
-            Unfortunately, Firefox has a bug on HTML5 <canvas> element
+            Unfortunately, some versions of Firefox
+            has a bug on HTML5 <canvas> element
             which makes this color picker program cause memory leak.
             For details, see
             https://bugzilla.mozilla.org/show_bug.cgi?id=1586495.`
